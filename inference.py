@@ -40,7 +40,7 @@ if _env_path.exists():
 # ---------------------------------------------------------------------------
 API_BASE_URL = os.environ.get("API_BASE_URL", "https://router.huggingface.co/v1")
 MODEL_NAME = os.environ.get("MODEL_NAME", "Qwen/Qwen3-30B-A3B:novita")
-HF_TOKEN = os.environ.get("HF_TOKEN", "")
+HF_TOKEN = os.environ.get("HF_TOKEN")
 GYM_BASE_URL = os.environ.get("GYM_BASE_URL", "http://localhost:7860")
 
 MAX_STEPS = 8
