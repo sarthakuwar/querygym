@@ -44,12 +44,27 @@ _TASK_REGISTRY: dict[str, type[BaseTask]] = {
 }
 
 # Reward deltas
-PENALTY_DESTRUCTIVE = -0.05
-PENALTY_SYNTAX_ERROR = -0.01
-PENALTY_REPEAT_QUERY = -0.02
+PENALTY_DESTRUCTIVE = -0.03
+PENALTY_SYNTAX_ERROR = -0.005
+PENALTY_REPEAT_QUERY = -0.01
+
+# Hard bounds for the cumulative episode score — strictly (0, 1) required by OpenEnv
+_SCORE_MIN: float = 0.05   # never returned as 0.0 even with zero agent progress
+_SCORE_MAX: float = 0.95   # cap away from 1.0 even if agent is perfect
 
 # Query execution timeout (seconds)
 _QUERY_TIMEOUT = 5
+
+
+def _clamp_score(value: float) -> float:
+    """Return value strictly inside (0, 1), hard-clamped to [_SCORE_MIN, _SCORE_MAX]."""
+    clamped = max(_SCORE_MIN, min(_SCORE_MAX, value))
+    # Belt-and-suspenders: guarantee the literal float is not 0.0 or 1.0
+    if clamped <= 0.0:
+        clamped = _SCORE_MIN
+    elif clamped >= 1.0:
+        clamped = _SCORE_MAX
+    return round(clamped, 4)
 
 
 def _is_allowed_sql(sql: str) -> bool:
@@ -83,7 +98,7 @@ class QueryEnv:
         self._task_id: str = "schema-explorer"
         self._step: int = 0
         self._done: bool = False
-        self._total_reward: float = 0.01
+        self._total_reward: float = _SCORE_MIN
         self._last_action: str | None = None
         self._history: list[str] = []  # SQL strings this episode
 
@@ -102,7 +117,7 @@ class QueryEnv:
             self._task.reset()
             self._step = 0
             self._done = False
-            self._total_reward = 0.01
+            self._total_reward = _SCORE_MIN
             self._last_action = None
             self._history = []
 
@@ -133,7 +148,7 @@ class QueryEnv:
                     "Destructive or disallowed SQL detected. "
                     "Only SELECT / WITH / EXPLAIN / PRAGMA reads are permitted."
                 )
-                self._total_reward = max(0.01, min(0.99, self._total_reward + PENALTY_DESTRUCTIVE))
+                self._total_reward = _clamp_score(self._total_reward + PENALTY_DESTRUCTIVE)
                 self._step += 1
                 self._last_action = sql
                 obs = QueryObservation(
@@ -145,7 +160,7 @@ class QueryEnv:
                 )
                 done = self._step >= self._task.max_steps
                 self._done = done
-                return obs, round(self._total_reward, 4), done, self._get_info_dict(error)
+                return obs, _clamp_score(self._total_reward), done, self._get_info_dict(error)
 
             # 2. Repeat query penalty
             if sql in self._history:
@@ -168,7 +183,7 @@ class QueryEnv:
             # 6. Update state
             self._history.append(sql)
             # Accumulate and strictly clamp total_reward to (0, 1) — validator requires this
-            self._total_reward = max(0.01, min(0.99, self._total_reward + step_reward))
+            self._total_reward = _clamp_score(self._total_reward + step_reward)
             self._step += 1
             self._last_action = sql
 
@@ -184,7 +199,7 @@ class QueryEnv:
                 schema_hint=_SCHEMA_HINT,
             )
             # Return total_reward as the score — always strictly in (0.01, 0.99)
-            return obs, round(self._total_reward, 4), self._done, self._get_info_dict(error)
+            return obs, _clamp_score(self._total_reward), self._done, self._get_info_dict(error)
 
     # ------------------------------------------------------------------
     # state snapshot
@@ -196,7 +211,7 @@ class QueryEnv:
                 step=self._step,
                 max_steps=self._task.max_steps if self._task else 8,
                 done=self._done,
-                total_reward=round(self._total_reward, 4),
+                total_reward=_clamp_score(self._total_reward),
                 last_action=self._last_action,
                 history=list(self._history[-10:]),  # last 10 queries
             )
@@ -209,5 +224,5 @@ class QueryEnv:
         return {
             **task_info,
             "error": error,
-            "total_reward": round(self._total_reward, 4),
+            "total_reward": _clamp_score(self._total_reward),
         }

@@ -2,8 +2,9 @@
 schema-explorer task grader (easy).
 Agent must discover all table names, all column names, and row counts.
 
-11 milestones × 0.08 reward each = 0.88 max per episode.
+11 milestones × 0.08 reward each = 0.88 max delta; starting at 0.05 → max 0.93 per episode.
 Reward is incremental: only newly achieved milestones earn reward each step.
+Score is always strictly in (0.05, 0.95) — within OpenEnv's (0, 1) exclusive requirement.
 """
 
 from __future__ import annotations

@@ -1,7 +1,8 @@
 """
 kpi-analyst task grader (medium).
 Agent must answer 5 specific KPI questions about the billing data.
-Each KPI = 0.20 reward, max 1.0 per episode.
+Each KPI = 0.17 reward delta; starting at 0.05 → max 0.90 per episode.
+Score is always strictly in (0.05, 0.95) — within OpenEnv's (0, 1) exclusive requirement.
 
 Grading rule (fixes applied per user review):
 - Only match against rows[0][0] when the result is a single row.
@@ -20,7 +21,7 @@ from db.connection import get_db
 from tasks.base import BaseTask
 
 KPI_KEYS = ["mrr", "churn_rate", "top_customer", "avg_sub_length_days", "failed_invoice_count"]
-REWARD_PER_KPI = 0.19  # max 0.95 per episode
+REWARD_PER_KPI = 0.17  # 5 × 0.17 = 0.85 max delta; + 0.05 initial = 0.90 total (stays under 0.95 cap)
 TOLERANCE = 0.05  # ±5%
 
 
@@ -45,6 +46,9 @@ def _compute_kpis(conn: sqlite3.Connection) -> dict[str, float | int]:
     cur.execute("SELECT COUNT(*) FROM subscriptions WHERE status = 'cancelled'")
     cancelled = cur.fetchone()[0]
     churn_rate = round(cancelled / total, 4) if total else 0.0
+    # Clamp churn_rate away from exact 0.0 or 1.0 so it's never equal to the
+    # OpenEnv score boundaries (belt-and-suspenders guard for the expected dict).
+    churn_rate = max(0.0001, min(0.9999, churn_rate))
 
     # Top customer by total paid invoice amount
     cur.execute(

@@ -2,7 +2,8 @@
 data-debugger task grader (hard).
 Agent must find and report all 4 seeded integrity bugs via SQL queries.
 
-Each bug = 0.25 reward, max 1.0 per episode.
+Each bug = 0.21 reward delta; starting at 0.05 → max 0.89 per episode.
+Score is always strictly in (0.05, 0.95) — within OpenEnv's (0, 1) exclusive requirement.
 Bug detection uses predicate matching against query results.
 """
 
@@ -13,7 +14,7 @@ from typing import Any
 from db.bugs import ALL_BUGS, BUG_BAD_DATES, BUG_DUP_INVOICE, BUG_NEGATIVE_AMOUNT, BUG_ORPHAN_SUB
 from tasks.base import BaseTask
 
-REWARD_PER_BUG = 0.24  # max 0.96 per episode
+REWARD_PER_BUG = 0.21  # 4 × 0.21 = 0.84 max delta; + 0.05 initial = 0.89 total (stays under 0.95 cap)
 
 
 def _check_orphan_sub(result: list[dict[str, Any]]) -> bool:
