@@ -13,7 +13,7 @@ from typing import Any
 from db.bugs import ALL_BUGS, BUG_BAD_DATES, BUG_DUP_INVOICE, BUG_NEGATIVE_AMOUNT, BUG_ORPHAN_SUB
 from tasks.base import BaseTask
 
-REWARD_PER_BUG = 0.25
+REWARD_PER_BUG = 0.24  # max 0.96 per episode
 
 
 def _check_orphan_sub(result: list[dict[str, Any]]) -> bool:

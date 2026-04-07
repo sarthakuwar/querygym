@@ -25,7 +25,7 @@ ALL_MILESTONES: list[str] = (
     + list(MILESTONE_COLS.values())
     + list(MILESTONE_COUNT.values())
 )
-REWARD_PER_MILESTONE = round(1.0 / len(ALL_MILESTONES), 4)  # 0.1 each
+REWARD_PER_MILESTONE = 0.09  # max 0.9 per episode
 
 
 class SchemaExplorerTask(BaseTask):

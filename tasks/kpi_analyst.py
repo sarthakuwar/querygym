@@ -20,7 +20,7 @@ from db.connection import get_db
 from tasks.base import BaseTask
 
 KPI_KEYS = ["mrr", "churn_rate", "top_customer", "avg_sub_length_days", "failed_invoice_count"]
-REWARD_PER_KPI = 0.20
+REWARD_PER_KPI = 0.19  # max 0.95 per episode
 TOLERANCE = 0.05  # ±5%
 
 
