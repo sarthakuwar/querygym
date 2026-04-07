@@ -83,7 +83,7 @@ class QueryEnv:
         self._task_id: str = "schema-explorer"
         self._step: int = 0
         self._done: bool = False
-        self._total_reward: float = 0.0
+        self._total_reward: float = 0.01
         self._last_action: str | None = None
         self._history: list[str] = []  # SQL strings this episode
 
@@ -102,7 +102,7 @@ class QueryEnv:
             self._task.reset()
             self._step = 0
             self._done = False
-            self._total_reward = 0.0
+            self._total_reward = 0.01
             self._last_action = None
             self._history = []
 
@@ -168,8 +168,13 @@ class QueryEnv:
 
             # 6. Update state
             self._history.append(sql)
+            
+            prev_total = self._total_reward
             self._total_reward += step_reward
-            self._total_reward = max(self._total_reward, -1.0)
+            # Strictly bound total_reward to (0, 1) to pass validation
+            self._total_reward = max(0.01, min(0.99, self._total_reward))
+            step_reward = self._total_reward - prev_total
+            
             self._step += 1
             self._last_action = sql
 

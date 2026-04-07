@@ -2,7 +2,7 @@
 schema-explorer task grader (easy).
 Agent must discover all table names, all column names, and row counts.
 
-10 milestones × 0.10 reward each = 1.0 max per episode.
+11 milestones × 0.08 reward each = 0.88 max per episode.
 Reward is incremental: only newly achieved milestones earn reward each step.
 """
 
@@ -25,7 +25,7 @@ ALL_MILESTONES: list[str] = (
     + list(MILESTONE_COLS.values())
     + list(MILESTONE_COUNT.values())
 )
-REWARD_PER_MILESTONE = 0.09  # max 0.9 per episode
+REWARD_PER_MILESTONE = 0.08  # max 0.88 per episode
 
 
 class SchemaExplorerTask(BaseTask):
