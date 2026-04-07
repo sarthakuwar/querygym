@@ -129,12 +129,11 @@ class QueryEnv:
 
             # 1. Whitelist check (fix #3: replaces narrow blacklist)
             if not _is_allowed_sql(sql):
-                step_reward += PENALTY_DESTRUCTIVE
                 error = (
                     "Destructive or disallowed SQL detected. "
                     "Only SELECT / WITH / EXPLAIN / PRAGMA reads are permitted."
                 )
-                self._total_reward += step_reward
+                self._total_reward = max(0.01, min(0.99, self._total_reward + PENALTY_DESTRUCTIVE))
                 self._step += 1
                 self._last_action = sql
                 obs = QueryObservation(
@@ -146,7 +145,7 @@ class QueryEnv:
                 )
                 done = self._step >= self._task.max_steps
                 self._done = done
-                return obs, step_reward, done, self._get_info_dict(error)
+                return obs, round(self._total_reward, 4), done, self._get_info_dict(error)
 
             # 2. Repeat query penalty
             if sql in self._history:
@@ -168,13 +167,8 @@ class QueryEnv:
 
             # 6. Update state
             self._history.append(sql)
-            
-            prev_total = self._total_reward
-            self._total_reward += step_reward
-            # Strictly bound total_reward to (0, 1) to pass validation
-            self._total_reward = max(0.01, min(0.99, self._total_reward))
-            step_reward = self._total_reward - prev_total
-            
+            # Accumulate and strictly clamp total_reward to (0, 1) — validator requires this
+            self._total_reward = max(0.01, min(0.99, self._total_reward + step_reward))
             self._step += 1
             self._last_action = sql
 
@@ -189,7 +183,8 @@ class QueryEnv:
                 error=error,
                 schema_hint=_SCHEMA_HINT,
             )
-            return obs, round(step_reward, 4), self._done, self._get_info_dict(error)
+            # Return total_reward as the score — always strictly in (0.01, 0.99)
+            return obs, round(self._total_reward, 4), self._done, self._get_info_dict(error)
 
     # ------------------------------------------------------------------
     # state snapshot
