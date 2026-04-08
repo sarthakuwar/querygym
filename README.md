@@ -1,6 +1,6 @@
-﻿---
+---
 title: QueryGym
-emoji: ≡ƒùä∩╕Å
+emoji: 🗄️
 colorFrom: blue
 colorTo: green
 sdk: docker
