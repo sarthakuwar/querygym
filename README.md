@@ -1,6 +1,6 @@
----
+﻿---
 title: QueryGym
-emoji: 🗄️
+emoji: ≡ƒùä∩╕Å
 colorFrom: blue
 colorTo: green
 sdk: docker
@@ -12,17 +12,17 @@ tags:
   - agent-evaluation
 ---
 
-# QueryGym 🗄️
+# QueryGym ≡ƒùä∩╕Å
 
 > **An [OpenEnv](https://github.com/meta-pytorch/OpenEnv)-compliant reinforcement-learning environment for evaluating SQL-reasoning agents on a realistic SaaS billing database.**
 
-QueryGym challenges agents to navigate a real-world-style SQLite database through a structured sequence of progressively harder analytical tasks — from schema discovery to KPI computation to data-integrity forensics. The environment provides dense, step-level reward signals, deterministic episode reset, and full OpenEnv protocol compliance.
+QueryGym challenges agents to navigate a real-world-style SQLite database through a structured sequence of progressively harder analytical tasks ΓÇö from schema discovery to KPI computation to data-integrity forensics. The environment provides dense, step-level reward signals, deterministic episode reset, and full OpenEnv protocol compliance.
 
 ---
 
 ## Motivation
 
-Most SQL benchmarks (Spider, BIRD, WikiSQL) evaluate end-to-end query generation against a static ground truth. They do not evaluate an agent's ability to *explore* an unfamiliar schema, *iteratively refine* queries based on observed results, or *detect anomalies* in live data. QueryGym fills this gap by framing SQL interaction as a multi-step RL episode — rewarding incremental progress rather than a single correct answer.
+Most SQL benchmarks (Spider, BIRD, WikiSQL) evaluate end-to-end query generation against a static ground truth. They do not evaluate an agent's ability to *explore* an unfamiliar schema, *iteratively refine* queries based on observed results, or *detect anomalies* in live data. QueryGym fills this gap by framing SQL interaction as a multi-step RL episode ΓÇö rewarding incremental progress rather than a single correct answer.
 
 This makes QueryGym directly useful for evaluating:
 - Tool-use agents that call SQL in an agentic loop
@@ -45,15 +45,15 @@ This makes QueryGym directly useful for evaluating:
 |---|---|---|
 | `plans` | 4 | Subscription tiers: Starter ($9.99), Pro ($29.99), Business ($79.99), Enterprise ($249.99) |
 | `customers` | 60 | Accounts with `name`, `email`, `country`, `created_at` |
-| `subscriptions` | ~80 | Per-customer plan subscriptions; `status ∈ {active, cancelled, trialing}` |
-| `invoices` | ~120 | Monthly billing records; `status ∈ {paid, failed, pending}` |
+| `subscriptions` | ~80 | Per-customer plan subscriptions; `status Γêê {active, cancelled, trialing}` |
+| `invoices` | ~120 | Monthly billing records; `status Γêê {paid, failed, pending}` |
 | `events` | ~150 | Lifecycle signals: `signup`, `upgrade`, `downgrade`, `churn` |
 
 Four deterministic data-integrity bugs are injected after each `reset()` to support the `data-debugger` task:
-1. **Orphaned subscription** — `customer_id = 9999` references a non-existent customer
-2. **Duplicate invoice** — exact copy of the first invoice record
-3. **Negative invoice amount** — `invoices.amount = -149.99`
-4. **Chronologically invalid subscription** — `end_date ('2020-01-01') < start_date`
+1. **Orphaned subscription** ΓÇö `customer_id = 9999` references a non-existent customer
+2. **Duplicate invoice** ΓÇö exact copy of the first invoice record
+3. **Negative invoice amount** ΓÇö `invoices.amount = -149.99`
+4. **Chronologically invalid subscription** ΓÇö `end_date ('2020-01-01') < start_date`
 
 ---
 
@@ -97,65 +97,65 @@ Every `/step` response returns a structured JSON observation:
 }
 ```
 
-`result` is a list of row-dicts (column name → value). `null` on reset or SQL error.  
+`result` is a list of row-dicts (column name ΓåÆ value). `null` on reset or SQL error.  
 `info` exposes task-specific progress metadata to aid agent reasoning.
 
 ---
 
 ## Tasks
 
-### Task 1 — `schema-explorer` *(easy)*
+### Task 1 ΓÇö `schema-explorer` *(easy)*
 
 **Objective:** Fully map the database schema without prior knowledge.
 
-The agent must discover: (a) all 5 table names, (b) the column structure of each table, and (c) the row count of each table — through 11 discrete milestones.
+The agent must discover: (a) all 5 table names, (b) the column structure of each table, and (c) the row count of each table ΓÇö through 11 discrete milestones.
 
-| Milestone | Condition | Reward Δ |
+| Milestone | Condition | Reward ╬ö |
 |---|---|---|
 | `table_list` | All 5 table names appear in a single result | +0.08 |
-| `cols_<table>` × 5 | `PRAGMA table_info(<t>)` or `SELECT *` with real column names | +0.08 each |
-| `count_<table>` × 5 | `SELECT COUNT(*)` returning a positive integer | +0.08 each |
+| `cols_<table>` ├ù 5 | `PRAGMA table_info(<t>)` or `SELECT *` with real column names | +0.08 each |
+| `count_<table>` ├ù 5 | `SELECT COUNT(*)` returning a positive integer | +0.08 each |
 
-**Max reward delta:** 11 × 0.08 = 0.88 | **Max steps:** 8 | **Starting score:** 0.05  
+**Max reward delta:** 11 ├ù 0.08 = 0.88 | **Max steps:** 8 | **Starting score:** 0.05  
 **Episode max score:** 0.05 + 0.88 = **0.93**
 
 ---
 
-### Task 2 — `kpi-analyst` *(medium)*
+### Task 2 ΓÇö `kpi-analyst` *(medium)*
 
 **Objective:** Derive five business KPIs from first principles using SQL.
 
-Ground-truth KPI values are recomputed from the live (bug-injected) database after each `reset()` — agents cannot hard-code answers.
+Ground-truth KPI values are recomputed from the live (bug-injected) database after each `reset()` ΓÇö agents cannot hard-code answers.
 
 | KPI | SQL Pattern | Tolerance |
 |---|---|---|
-| `mrr` | `SUM(price_monthly)` for `active` subscriptions | ±5% |
-| `churn_rate` | `cancelled_count / total_count` | ±5% |
+| `mrr` | `SUM(price_monthly)` for `active` subscriptions | ┬▒5% |
+| `churn_rate` | `cancelled_count / total_count` | ┬▒5% |
 | `top_customer` | Customer ID with highest total paid invoice amount | Exact |
-| `avg_sub_length_days` | `AVG(julianday(end_date) - julianday(start_date))` | ±5% |
+| `avg_sub_length_days` | `AVG(julianday(end_date) - julianday(start_date))` | ┬▒5% |
 | `failed_invoice_count` | `COUNT(*)` where `status = 'failed'` | Exact |
 
-**Reward Δ per KPI:** +0.17 | **Max delta:** 5 × 0.17 = 0.85 | **Max steps:** 8  
+**Reward ╬ö per KPI:** +0.17 | **Max delta:** 5 ├ù 0.17 = 0.85 | **Max steps:** 8  
 **Episode max score:** 0.05 + 0.85 = **0.90**
 
 Partial credit is awarded per KPI; the agent does not need to answer all five to earn reward.
 
 ---
 
-### Task 3 — `data-debugger` *(hard)*
+### Task 3 ΓÇö `data-debugger` *(hard)*
 
 **Objective:** Identify all four seeded data-integrity anomalies via exploratory SQL.
 
-The agent must produce query results that *contain evidence* of each bug. Detection is purely result-driven — the agent is not told how many bugs exist or what they are.
+The agent must produce query results that *contain evidence* of each bug. Detection is purely result-driven ΓÇö the agent is not told how many bugs exist or what they are.
 
-| Bug | Detection Predicate | Reward Δ |
+| Bug | Detection Predicate | Reward ╬ö |
 |---|---|---|
 | Orphaned subscription | Result contains row with `customer_id = 9999` | +0.21 |
 | Duplicate invoice | Result has two rows with identical `(subscription_id, amount, due_date)` | +0.21 |
 | Negative amount | Result has row where `amount < 0` | +0.21 |
 | Bad date range | Result has row where `end_date < start_date` (ISO-8601 string compare) | +0.21 |
 
-**Max delta:** 4 × 0.21 = 0.84 | **Max steps:** 8  
+**Max delta:** 4 ├ù 0.21 = 0.84 | **Max steps:** 8  
 **Episode max score:** 0.05 + 0.84 = **0.89**
 
 This task genuinely challenges frontier models: no schema hint reveals the bugs, and the agent must reason about data-quality heuristics to formulate the right detection queries.
@@ -164,28 +164,28 @@ This task genuinely challenges frontier models: no schema hint reveals the bugs,
 
 ## Reward Function
 
-The environment maintains a **cumulative episode score** `S ∈ (0.05, 0.95)`:
+The environment maintains a **cumulative episode score** `S Γêê (0.05, 0.95)`:
 
 ```
-S_0 = 0.05    (episode baseline — strictly > 0 as required by OpenEnv)
+S_0 = 0.05    (episode baseline ΓÇö strictly > 0 as required by OpenEnv)
 
 At each step t:
-  Δ_task  = grader output (positive when progress made, 0 otherwise)
-  Δ_step  = Δ_task + penalties
+  ╬ö_task  = grader output (positive when progress made, 0 otherwise)
+  ╬ö_step  = ╬ö_task + penalties
 
-  S_t = clamp(S_{t-1} + Δ_step, 0.05, 0.95)
+  S_t = clamp(S_{t-1} + ╬ö_step, 0.05, 0.95)
 ```
 
 **Reward components:**
 
-| Event | Δ Reward |
+| Event | ╬ö Reward |
 |---|---|
 | Task milestone solved (schema) | +0.08 per milestone |
 | KPI correctly answered (kpi-analyst) | +0.17 per KPI |
 | Data bug detected (data-debugger) | +0.21 per bug |
-| Destructive / disallowed SQL (refused) | −0.03 |
-| SQL syntax or runtime error | −0.005 |
-| Repeated identical query | −0.01 |
+| Destructive / disallowed SQL (refused) | ΓêÆ0.03 |
+| SQL syntax or runtime error | ΓêÆ0.005 |
+| Repeated identical query | ΓêÆ0.01 |
 
 Scores are clamped to `[0.05, 0.95]` at every step, satisfying the OpenEnv Phase 2 requirement that task scores are **strictly in (0, 1)**.
 
@@ -203,7 +203,7 @@ Starts a fresh, deterministic episode. The database is wiped and re-seeded with 
 ```
 Valid `task_id` values: `schema-explorer`, `kpi-analyst`, `data-debugger`
 
-**Response:** `QueryObservation` — initial observation with `step=0`, `result=null`.
+**Response:** `QueryObservation` ΓÇö initial observation with `step=0`, `result=null`.
 
 ---
 
@@ -234,7 +234,7 @@ Returns the full current episode state snapshot (task, step, cumulative reward, 
 
 ### `GET /healthz`
 
-Returns `{"status": "ok"}` — used by HF Spaces for liveness checks.
+Returns `{"status": "ok"}` ΓÇö used by HF Spaces for liveness checks.
 
 ---
 
@@ -292,7 +292,7 @@ curl -s -X POST http://localhost:7860/step \
 |---|---|---|---|
 | `API_BASE_URL` | Yes | `https://router.huggingface.co/v1` | OpenAI-compatible API endpoint for the LLM |
 | `MODEL_NAME` | Yes | `Qwen/Qwen3-30B-A3B:novita` | Model identifier passed to the OpenAI client |
-| `HF_TOKEN` | Yes | — | Hugging Face access token (used as API key) |
+| `HF_TOKEN` | Yes | ΓÇö | Hugging Face access token (used as API key) |
 | `GYM_BASE_URL` | No | `http://localhost:7860` | Base URL of the running QueryGym server |
 
 ---
@@ -317,5 +317,5 @@ Measured over 5 deterministic episodes (`random.seed(42)`, `temperature=0.2`) us
 - **Thread safety:** `QueryEnv.reset()` and `QueryEnv.step()` are both guarded by a `threading.Lock`, making the server safe for concurrent requests without episode state corruption.
 - **Determinism:** `random.seed(42)` and `Faker.seed(42)` are called inside `seed()` on every `reset_db()` call, guaranteeing identical data across episodes and submissions.
 - **SQL safety:** A whitelist regex (`^\\s*(select|with|explain|pragma\\s+\\w+\\s*(?!\\s*=))`) is applied before any DB I/O. PRAGMA write forms are additionally blocked by a secondary pattern.
-- **Score bounds:** `_clamp_score()` applies `max(0.05, min(0.95, value))` plus an explicit `≤ 0.0` / `≥ 1.0` guard at every reward return site, satisfying OpenEnv's strict `(0, 1)` exclusive requirement.
+- **Score bounds:** `_clamp_score()` applies `max(0.05, min(0.95, value))` plus an explicit `Γëñ 0.0` / `ΓëÑ 1.0` guard at every reward return site, satisfying OpenEnv's strict `(0, 1)` exclusive requirement.
 - **In-memory DB:** The SQLite database lives entirely in RAM (`:memory:`), giving sub-millisecond query execution and eliminating disk I/O from the evaluation loop.
