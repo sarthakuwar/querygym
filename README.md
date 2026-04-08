@@ -33,7 +33,11 @@ This makes QueryGym directly useful for evaluating:
 
 ## Environment Architecture
 
+<<<<<<< HEAD
 ![QueryGym Architecture](assets/querygym-architecture.png.png)
+=======
+![QueryGym Architecture](https://raw.githubusercontent.com/sarthakuwar/querygym/main/assets/querygymarchitecture.png)
+>>>>>>> c0fa07c (docs: use GitHub raw URL for architecture image (HF Spaces compatibility))
 
 **Database schema (SQLite, in-memory, deterministic seed 42):**
 
