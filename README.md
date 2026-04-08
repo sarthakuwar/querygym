@@ -33,7 +33,7 @@ This makes QueryGym directly useful for evaluating:
 
 ## Environment Architecture
 
-![QueryGym Architecture](assets/querygym%20architecture.png)
+![QueryGym Architecture](assets/querygym-architecture.png.png)
 
 **Database schema (SQLite, in-memory, deterministic seed 42):**
 
