@@ -33,25 +33,7 @@ This makes QueryGym directly useful for evaluating:
 
 ## Environment Architecture
 
-```
-┌──────────────────────────────────────────────────────┐
-│                    Agent (LLM)                       │
-│               POST /step  {"sql": "..."}             │
-└────────────────────────┬─────────────────────────────┘
-                         │
-┌────────────────────────▼─────────────────────────────┐
-│                  QueryEnv (FastAPI)                  │
-│                                                      │
-│  ┌─────────────┐   ┌──────────────┐  ┌────────────┐ │
-│  │  SQL Guard  │→  │ SQLite Exec  │→ │  Grader    │ │
-│  │ (whitelist) │   │ (in-memory)  │  │ (per-task) │ │
-│  └─────────────┘   └──────────────┘  └─────┬──────┘ │
-│                                             │        │
-│  total_reward ← clamp(prev + Δreward, 0.05, 0.95)   │
-└─────────────────────────────────────────────┼────────┘
-                                              │
-                              {observation, reward, done, info}
-```
+![QueryGym Architecture](assets/querygym%20architecture.png)
 
 **Database schema (SQLite, in-memory, deterministic seed 42):**
 
